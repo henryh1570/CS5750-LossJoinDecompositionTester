@@ -1,12 +1,12 @@
-import java.util.HashSet;
+import java.util.ArrayList;
 
 //Decomposition is a set of smaller relations {R1, R2, ..., Rn} derived from a relation R.
 public class Decomposition {
 
-    HashSet<Relation> setOfDecompositions;
+    ArrayList<Relation> setOfDecompositions;
 
-    public Decomposition(HashSet<Relation> decompositions) {
-        setOfDecompositions = new HashSet<>();
+    public Decomposition(ArrayList<Relation> decompositions) {
+        setOfDecompositions = new ArrayList<>();
         for (Relation R: decompositions) {
             setOfDecompositions.add(R);
         }
