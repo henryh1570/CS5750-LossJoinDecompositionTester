@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 
 public class App {
     // This is the Main Class for Algorithm Ten
@@ -8,6 +9,8 @@ public class App {
 
         //Input: Relation R, Decomposition D, Set of Dependencies F
         //Input: Attributes are provided to form R, D, F.
+
+        long startTime = new Date().getTime();
 
         //Universal Relation Initialization
         String[] attributes = {"Ssn", "Ename", "Pnumber", "Pname", "Plocation", "Hours"};
@@ -143,5 +146,9 @@ public class App {
         } else {
             System.out.println("The Decomposition is LOSSY");
         }
+
+        long endTime = new Date().getTime();
+        System.out.println("time in milliseconds: " + (endTime-startTime));
+
     }
 }
