@@ -6,6 +6,10 @@ public class Relation {
 
     ArrayList<String> setOfAttributes;
 
+    public Relation() {
+        setOfAttributes = new ArrayList<>();
+    }
+
     public Relation(String[] arr) {
         setOfAttributes = new ArrayList<String>(Arrays.asList(arr));
     }

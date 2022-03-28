@@ -1,33 +1,80 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.util.*;
 
 public class App {
     // This is the Main Class for Algorithm Ten
     // General Algorithm for testing Lossless Join Decomposition
+
     public static void main(String[] args) {
 
-        //Input: Relation R, Decomposition D, Set of Dependencies F
-        //Input: Attributes are provided to form R, D, F.
+        ArrayList<String> listOfRelation = new ArrayList<>();
+        ArrayList<String> listOfDecomposition = new ArrayList<>();
+        ArrayList<String> listOfDependency = new ArrayList<>();
+
+        //Read inputs: Relation R, Decomposition D, Set of Dependencies F from file.
+        try {
+            File f = new File(args[0]);
+            FileReader fr = new FileReader(f);
+            BufferedReader br = new BufferedReader(fr);
+
+            String next = br.readLine();
+            ArrayList<String> currentList = listOfRelation;
+
+            do {
+                String line = next.toLowerCase();
+
+                //Check for Newlines and pound character.
+                if (!line.isEmpty()) {
+                    if (line.contains("#")) {
+                        // Switch currently parsing list
+                        if (line.contains("relation")) {
+                            currentList = listOfRelation;
+                        }
+                        if (line.contains("decomposition")) {
+                            currentList = listOfDecomposition;
+                        }
+                        if (line.contains("dependency") || line.contains("dependencies")) {
+                            currentList = listOfDependency;
+                        }
+                        // Otherwise add the input line
+                    } else {
+                        currentList.add(next);
+                    }
+                }
+                next = br.readLine();
+            } while(next != null);
+        } catch (Exception e) {
+            System.err.println(e + " was found, exiting program now.");
+            System.err.println("Please run the program with the input text file as argument 1.");
+            System.exit(5);
+        }
 
         long startTime = new Date().getTime();
 
         //Universal Relation Initialization
-        String[] attributes = {"Ssn", "Ename", "Pnumber", "Pname", "Plocation", "Hours"};
-        Relation R = new Relation(attributes);
+        String[] R_Attributes = listOfRelation.get(0).split(",");
+        Relation R = new Relation(R_Attributes);
 
         //Decomposition Initialization
-        Relation R1 = new Relation(new String[]{"Ssn", "Ename"});
-        Relation R2 = new Relation(new String[]{"Pnumber", "Pname", "Plocation"});
-        Relation R3 = new Relation(new String[]{"Ssn", "Pnumber", "Hours"});
-        ArrayList<Relation> derived = new ArrayList<>(Arrays.asList(new Relation[]{R1, R2, R3}));
+        ArrayList<Relation> derived = new ArrayList<>();
+        for (String line : listOfDecomposition) {
+            String[] D_Attributes = line.split(",");
+            Relation Ri = new Relation(D_Attributes);
+            derived.add(Ri);
+        }
         Decomposition D = new Decomposition(derived);
 
         //Dependency Initialization
-        Dependency F1 = new Dependency(new String[]{"Ssn"}, new String[]{"Ename"});
-        Dependency F2 = new Dependency(new String[]{"Pnumber"}, new String[]{"Pname", "Plocation"});
-        Dependency F3 = new Dependency(new String[]{"Ssn", "Pnumber"}, new String[]{"Hours"});
-        ArrayList<Dependency> F = new ArrayList<>(Arrays.asList(new Dependency[]{F1, F2, F3}));
+        ArrayList<Dependency> F = new ArrayList<>();
+        for (String line : listOfDependency) {
+            String[] sides = line.split("->");
+            String[] leftSide = sides[0].split(",");
+            String[] rightSide = sides[1].split(",");
+            Dependency Fi = new Dependency(leftSide, rightSide);
+            F.add(Fi);
+        }
 
         //STEP 1: Matrix S Initialization
         int numRows = D.setOfDecompositions.size();
@@ -66,9 +113,14 @@ public class App {
             System.out.println();
         }
 
-        //STEP 4: Looping the matrix and checking dependencies X -> Y
+        //STEP 4: Looping the matrix and checking dependencies X -> Y. Until no changes are made.
+        //Sometimes necessary to loop more than once because dependencies are checked sequentially.
+        boolean noChanges = false;
+        int numOfLoops = 0;
         step4:
-        {
+        while (noChanges == false) {
+            noChanges = true;
+            numOfLoops++;
             for (Dependency dep : F) {
                 ArrayList<String> X = dep.determinants;
                 ArrayList<String> Y = dep.dependents;
@@ -92,6 +144,10 @@ public class App {
                         anyRowHasAllX = true;
                         for (String attribute : Y) {
                             int index = R.setOfAttributes.indexOf(attribute);
+                            //an element with already an a does not count as a change
+                            if (!row[index].contains("a")) {
+                                noChanges = false;
+                            }
                             row[index] = ("a" + (index + 1));
                         }
 
@@ -115,6 +171,10 @@ public class App {
                     for (String attribute : X) {
                         int index = R.setOfAttributes.indexOf(attribute);
                         for (int a = 0; a < numRows; a++) {
+                            //an element already with b does not count as a change
+                            if (!S[a][index].contains("b")) {
+                                noChanges = false;
+                            }
                             //Hard set to b(1,*)
                             S[a][index] = ("b" + (0 + 1) + (index + 1));
                         }
@@ -123,6 +183,7 @@ public class App {
             }
         }
 
+        System.out.println(numOfLoops + " loops made over matrix S.");
         //STEP 5: Print the final matrix S and the result.
         System.out.println("Final Matrix:");
         boolean isLossless = false;
